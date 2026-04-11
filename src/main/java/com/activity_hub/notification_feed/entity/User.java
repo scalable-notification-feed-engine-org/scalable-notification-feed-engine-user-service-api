@@ -1,5 +1,7 @@
 package com.activity_hub.notification_feed.entity;
 
+import com.activity_hub.notification_feed.enums.UserRole;
+import com.activity_hub.notification_feed.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -33,6 +35,14 @@ public class User {
 
     @Column(name = "email", unique = true, nullable = false)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private UserRole role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private UserStatus status;
 
     @Column(nullable = false)
     private Boolean isActive;
