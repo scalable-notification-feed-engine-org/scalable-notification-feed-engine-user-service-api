@@ -28,5 +28,4 @@ public class UserStats {
     @JoinColumn(name = "user_id")
     private User user;
 
-
 }
