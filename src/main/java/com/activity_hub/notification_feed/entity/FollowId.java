@@ -11,6 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+@Builder
 public class FollowId implements Serializable {
     private UUID followerId;
     private UUID followeeId;
