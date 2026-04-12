@@ -1,27 +1,24 @@
 package com.activity_hub.notification_feed.event;
 
-import com.activity_hub.notification_feed.dto.event.KafkaEvent;
-import com.activity_hub.notification_feed.dto.event.UserEventTypes;
-import com.activity_hub.notification_feed.dto.event.UserRegisteredData;
-import com.activity_hub.notification_feed.dto.event.UserSendOtpEvent;
+import com.activity_hub.notification_feed.dto.event.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserEventPublisher {
+public class EventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishUserSendOtp(UserSendOtpEvent user) {
+    public void publishUserSendOtp(UserSendOtpEvent user) throws ExecutionException, InterruptedException {
         KafkaEvent<UserRegisteredData> event = new KafkaEvent<>(
-                UserEventTypes.USER_OTP,
+                EventTypes.USER_OTP,
                 LocalDateTime.now(),
                 new UserRegisteredData(
                         user.getUser_id(),
@@ -32,17 +29,33 @@ public class UserEventPublisher {
                 )
         );
 
-        sendEvent(user.getUser_id(),  event);
+        sendEvent(user.getUser_id(),event,EventTypes.USER_OTP);
+        log.info("User event published successfully");
 
+    }
+
+    public void publishFollowUser(FollowEvent follow) throws ExecutionException, InterruptedException {
+        KafkaEvent<FollowEvent> event = new KafkaEvent<>(
+                EventTypes.USER_FOLLOW,
+                LocalDateTime.now(),
+                new FollowEvent(
+                        follow.getFollowerId(),
+                        follow.getFolloweeId()
+                )
+        );
+
+        sendEvent((follow.getFollowerId().toString()+follow.getFolloweeId().toString()),event,EventTypes.USER_FOLLOW);
+        log.info("Follow event published successfully");
     }
 
     private void sendEvent(
             String key,
-            Object event
-    ) {
+            Object event,
+            String topic
+    ) throws ExecutionException, InterruptedException {
 
         ProducerRecord<String, Object> record =
-                new ProducerRecord<>("otp-send", key, event);
+                new ProducerRecord<>(topic, key, event);
 
 
 
@@ -50,14 +63,14 @@ public class UserEventPublisher {
             if (ex == null) {
                 log.info(
                         "Event sent | topic={} | partition={} | offset={}",
-                        "otp-send",
+                        topic,
                         result.getRecordMetadata().partition(),
                         result.getRecordMetadata().offset()
                 );
             } else {
-                log.error("Failed to send event to topic={}", "otp-send", ex);
+                log.error("Failed to send event to topic={}", topic, ex);
             }
-        });
+        }).get();
     }
 
 }
