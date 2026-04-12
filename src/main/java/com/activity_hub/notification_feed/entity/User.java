@@ -71,6 +71,8 @@ public class User {
     @Column(name = "contact", length = 20)
     private String contact;
 
+    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
+    private UserStats userStatus;
 
     @PrePersist
     protected void onCreate() {
