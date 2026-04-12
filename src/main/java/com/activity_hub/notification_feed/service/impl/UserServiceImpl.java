@@ -10,12 +10,11 @@ import com.activity_hub.notification_feed.dto.response.UserResponseDto;
 import com.activity_hub.notification_feed.entity.User;
 import com.activity_hub.notification_feed.enums.UserRole;
 import com.activity_hub.notification_feed.enums.UserStatus;
-import com.activity_hub.notification_feed.event.UserEventPublisher;
+import com.activity_hub.notification_feed.event.EventPublisher;
 import com.activity_hub.notification_feed.exception.DuplicateEntryException;
 import com.activity_hub.notification_feed.repository.UserRepository;
 import com.activity_hub.notification_feed.service.UserService;
 import com.activity_hub.notification_feed.util.ObjectMapper;
-import com.activity_hub.notification_feed.util.OtpGenerator;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +37,7 @@ public class UserServiceImpl implements UserService {
     private final KeycloakConfig keycloakConfig;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
-    private final UserEventPublisher userEventPublisher;
-    private final OtpGenerator otpGenerator;
+    private final EventPublisher eventPublisher;
     private final RedisService redisService;
 
     @Override
@@ -91,7 +89,7 @@ public class UserServiceImpl implements UserService {
             User savedUser = userRepository.save(user);
 
             try{
-                userEventPublisher
+                eventPublisher
                         .publishUserSendOtp(objectMapper.toCreateEvent(savedUser,redisService.saveOtp(savedUser.getEmail())));
             }catch (Exception e){
                 log.error("Failed to publish user created event", e);
