@@ -1,9 +1,6 @@
 package com.activity_hub.notification_feed.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +8,9 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "followers")
+@Table(name = "followers", indexes = {
+        @Index(name = "idx_followee_id", columnList = "followeeId")
+})
 @Getter
 @Setter
 @AllArgsConstructor
