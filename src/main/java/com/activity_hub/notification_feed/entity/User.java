@@ -45,19 +45,19 @@ public class User {
     private UserStatus status;
 
     @Column(nullable = false)
-    private Boolean isActive;
+    private boolean isActive;
 
     @Column(nullable = false)
-    private Boolean isAccountNonExpired;
+    private boolean isAccountNonExpired;
 
     @Column(nullable = false)
-    private Boolean isAccountNonLocked;
+    private boolean isAccountNonLocked;
 
     @Column(nullable = false)
-    private Boolean isCredentialsNonExpired;
+    private boolean isCredentialsNonExpired;
 
     @Column(nullable = false)
-    private Boolean isEnabled;
+    private boolean isEnabled;
 
     @Column(nullable = false)
     private boolean isEmailVerified;
