@@ -1,11 +1,11 @@
 package com.activity_hub.notification_feed.service.impl;
 
-import com.activity_hub.notification_feed.dto.event.EventTypes;
 import com.activity_hub.notification_feed.dto.event.FollowEvent;
 import com.activity_hub.notification_feed.entity.Follow;
 import com.activity_hub.notification_feed.entity.FollowId;
 import com.activity_hub.notification_feed.entity.OutboxEvent;
 import com.activity_hub.notification_feed.entity.User;
+import com.activity_hub.notification_feed.enums.FollowType;
 import com.activity_hub.notification_feed.exception.BadRequestException;
 import com.activity_hub.notification_feed.exception.NotFoundException;
 import com.activity_hub.notification_feed.repository.FollowRepository;
@@ -35,8 +35,66 @@ public class FollowUserImpl implements FollowService {
     @Transactional
     public void followUser(UUID followerId, UUID followeeId) {
 
-        if(followerId == followeeId) {
-            throw new BadRequestException("Cannot follow both own user..");
+        validateUsers(followerId, followeeId);
+
+        Optional<Follow> selectedFollow = followRepository
+                .findByIdFollowerIdAndIdFolloweeId(followerId, followeeId);
+
+        Follow followRecord;
+
+        if(selectedFollow.isPresent()) {
+
+            followRecord = selectedFollow.get();
+
+            if(followRecord.getFollowType() == FollowType.FOLLOW) {
+                throw new BadRequestException("Follow already exists");
+            }
+
+            followRecord.setFollowType(FollowType.FOLLOW);
+        }else {
+            followRecord = Follow.builder()
+                    .id(FollowId.builder()
+                            .followerId(followerId)
+                            .followeeId(followeeId)
+                            .build())
+                    .followType(FollowType.FOLLOW)
+                    .build();
+
+        }
+        Follow savedFollow = followRepository.save(followRecord);
+
+        saveToOutbox(savedFollow,FollowType.FOLLOW);
+
+    }
+
+    @Override
+    @Transactional
+    public void unfollowUser(UUID followerId, UUID followeeId) {
+
+        validateUsers(followerId, followeeId);
+
+        Follow selectedFollow = followRepository
+                .findByIdFollowerIdAndIdFolloweeId(followerId, followeeId)
+                .orElseThrow(() -> new NotFoundException("Follow not found"));
+
+
+        if(selectedFollow.getFollowType() == FollowType.UNFOLLOW) {
+            throw new BadRequestException("Already unfollowed this user");
+        }
+
+        System.out.println("Unfollowing user " + selectedFollow.getFollowType());
+
+        selectedFollow.setFollowType(FollowType.UNFOLLOW);
+        Follow follow = followRepository.saveAndFlush(selectedFollow);
+        System.out.println("Status after update: " + follow.getFollowType());
+
+        saveToOutbox(follow,FollowType.UNFOLLOW);
+
+    }
+
+    private void validateUsers(UUID followerId, UUID followeeId){
+        if(followerId.equals(followeeId)) {
+            throw new BadRequestException("User cannot follow/unfollow themselves");
         }
 
         List<UUID> ids = List.of(followerId, followeeId);
@@ -44,7 +102,7 @@ public class FollowUserImpl implements FollowService {
         List<User> selectUsers = userRepository.findAllById(ids);
 
         if(selectUsers.size() < 2) {
-          throw new NotFoundException("users not found");
+            throw new NotFoundException("users not found");
         }
 
         selectUsers.forEach(user -> {
@@ -54,46 +112,32 @@ public class FollowUserImpl implements FollowService {
                 }
             }else {
                 if(!user.isActive()){
-                  throw new BadRequestException("Followee is not active");
+                    throw new BadRequestException("Followee is not active");
                 }
             }
         });
+    }
 
-        Optional<Follow> selectedFollow = followRepository
-                .findByIdFollowerIdAndIdFolloweeId(followerId, followeeId);
-
-        if(selectedFollow.isPresent()) {
-            throw new BadRequestException("Follow already exists");
-        }
-
-        Follow follow = Follow.builder()
-                .id(FollowId.builder()
-                        .followerId(followerId)
-                        .followeeId(followeeId)
-                        .build())
-                .build();
-
-        Follow save = followRepository.save(follow);
-
+    private void saveToOutbox(Follow follow, FollowType eventType){
         try {
             FollowEvent followEvent = FollowEvent.builder()
-                    .followerId(save.getId().getFollowerId())
-                    .followeeId(save.getId().getFolloweeId())
+                    .followerId(follow.getId().getFollowerId())
+                    .followeeId(follow.getId().getFolloweeId())
+                    .followType(eventType)
                     .build();
 
             OutboxEvent outboxEvent = OutboxEvent.builder()
-                    .aggregateType(EventTypes.USER_FOLLOW)
+                    .aggregateType(eventType.toString())
                     .payload(objectMapper.writeValueAsString(followEvent))
+                    .followType(eventType)
                     .status("PENDING")
                     .build();
 
             outboxRepository.save(outboxEvent);
 
         }catch (Exception e){
-
             log.error("Failed to publish follow created event", e);
-
+            throw new RuntimeException("Event publishing failed. Rolling back transaction.");
         }
-
     }
 }
