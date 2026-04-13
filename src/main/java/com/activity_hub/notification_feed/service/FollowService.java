@@ -4,4 +4,5 @@ import java.util.UUID;
 
 public interface FollowService {
     void followUser(UUID followerId, UUID followeeId);
+    void unfollowUser(UUID followerId, UUID followeeId);
 }
