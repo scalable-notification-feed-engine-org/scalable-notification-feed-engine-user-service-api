@@ -18,17 +18,15 @@ public class EventConsumer {
     private final UserStatsService userStatsService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = EventTypes.USER_FOLLOW,groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = {EventTypes.USER_FOLLOW , EventTypes.USER_UNFOLLOW},groupId = "${spring.kafka.consumer.group-id}")
     public void consumeFollowEvent(String message) {
-        log.info("Received message: {}", message);
-
         try {
             JsonNode jsonNode = objectMapper.readTree(message);
             JsonNode dataNode = jsonNode.get("data");
 
             FollowEvent event = objectMapper.treeToValue(dataNode, FollowEvent.class);
 
-            userStatsService.updateStats(event.getFollowerId(), event.getFolloweeId());
+            userStatsService.updateStats(event.getFollowerId(), event.getFolloweeId(), event.getFollowType());
 
         }catch (Exception e) {
 
