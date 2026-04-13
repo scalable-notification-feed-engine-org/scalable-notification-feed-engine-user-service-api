@@ -1,5 +1,6 @@
 package com.activity_hub.notification_feed.entity;
 
+import com.activity_hub.notification_feed.enums.FollowType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,10 @@ public class Follow {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "follow_type", nullable = false)
+    private FollowType followType;
 
     @PrePersist
     protected void onCreate() {
