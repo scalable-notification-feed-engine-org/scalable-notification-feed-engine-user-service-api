@@ -1,15 +1,18 @@
 package com.activity_hub.notification_feed.service.impl;
 
+import com.activity_hub.notification_feed.dto.event.EventTypes;
 import com.activity_hub.notification_feed.dto.event.FollowEvent;
 import com.activity_hub.notification_feed.entity.Follow;
 import com.activity_hub.notification_feed.entity.FollowId;
+import com.activity_hub.notification_feed.entity.OutboxEvent;
 import com.activity_hub.notification_feed.entity.User;
-import com.activity_hub.notification_feed.event.EventPublisher;
 import com.activity_hub.notification_feed.exception.BadRequestException;
 import com.activity_hub.notification_feed.exception.NotFoundException;
 import com.activity_hub.notification_feed.repository.FollowRepository;
+import com.activity_hub.notification_feed.repository.OutboxRepository;
 import com.activity_hub.notification_feed.repository.UserRepository;
 import com.activity_hub.notification_feed.service.FollowService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +28,8 @@ public class FollowUserImpl implements FollowService {
 
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
-    private final EventPublisher eventPublisher;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -76,7 +80,14 @@ public class FollowUserImpl implements FollowService {
                     .followerId(save.getId().getFollowerId())
                     .followeeId(save.getId().getFolloweeId())
                     .build();
-            eventPublisher.publishFollowUser(followEvent);
+
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateType(EventTypes.USER_FOLLOW)
+                    .payload(objectMapper.writeValueAsString(followEvent))
+                    .status("PENDING")
+                    .build();
+
+            outboxRepository.save(outboxEvent);
 
         }catch (Exception e){
 
