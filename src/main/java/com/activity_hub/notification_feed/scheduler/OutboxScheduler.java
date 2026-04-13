@@ -36,8 +36,9 @@ public class OutboxScheduler {
         pendingEvents.forEach(outboxEvent -> {
             try {
                 FollowEvent followEvent = objectMapper.readValue(outboxEvent.getPayload(), FollowEvent.class);
-                eventPublisher.publishFollowUser(followEvent);
+                eventPublisher.publishFollowUser(followEvent,outboxEvent.getFollowType());
                 outboxEvent.setStatus("PROCESSED");
+                outboxEvent.setFollowType(followEvent.getFollowType());
                 outboxRepository.save(outboxEvent);
             } catch (Exception e) {
                 log.error("Failed to process outbox event ID: {}. Error: {}", outboxEvent.getId(), e.getMessage());
