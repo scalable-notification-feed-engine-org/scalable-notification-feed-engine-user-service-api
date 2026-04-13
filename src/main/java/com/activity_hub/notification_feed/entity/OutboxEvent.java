@@ -1,5 +1,6 @@
 package com.activity_hub.notification_feed.entity;
 
+import com.activity_hub.notification_feed.enums.FollowType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -32,6 +33,10 @@ public class OutboxEvent {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "follow_type", nullable = false)
+    private FollowType  followType;
 
     @PrePersist
     public void prePersist() {
