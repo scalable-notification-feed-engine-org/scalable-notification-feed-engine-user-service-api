@@ -1,6 +1,7 @@
 package com.activity_hub.notification_feed.event;
 
 import com.activity_hub.notification_feed.dto.event.*;
+import com.activity_hub.notification_feed.enums.FollowType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -34,19 +35,23 @@ public class EventPublisher {
 
     }
 
-    public void publishFollowUser(FollowEvent follow) throws ExecutionException, InterruptedException {
+    public void publishFollowUser(FollowEvent follow, FollowType followType) throws ExecutionException, InterruptedException {
         KafkaEvent<FollowEvent> event = new KafkaEvent<>(
-                EventTypes.USER_FOLLOW,
+                followType.toString(),
                 LocalDateTime.now(),
                 new FollowEvent(
                         follow.getFollowerId(),
-                        follow.getFolloweeId()
+                        follow.getFolloweeId(),
+                        followType
                 )
         );
 
-        sendEvent((follow.getFollowerId().toString()+follow.getFolloweeId().toString()),event,EventTypes.USER_FOLLOW);
+        sendEvent((follow.getFollowerId().toString()+follow.getFolloweeId().toString()),event,
+                follow.getFollowType().equals(FollowType.FOLLOW)?EventTypes.USER_FOLLOW:EventTypes.USER_UNFOLLOW);
         log.info("Follow event published successfully");
     }
+
+
 
     private void sendEvent(
             String key,
