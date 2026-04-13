@@ -4,8 +4,6 @@ import com.activity_hub.notification_feed.enums.UserRole;
 import com.activity_hub.notification_feed.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -20,8 +18,7 @@ public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @JdbcTypeCode(SqlTypes.BINARY)
-    @Column(name = "id", columnDefinition = "BINARY(16)")
+    @Column(name = "id")
     private UUID id;
 
     @Column(name = "keycloak_user_id", unique = true, nullable = false)
@@ -71,8 +68,14 @@ public class User {
     @Column(name = "contact", length = 20)
     private String contact;
 
-    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
-    private UserStats userStatus;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "id",
+            referencedColumnName = "user_id",
+            insertable = false,
+            updatable = false
+    )
+    private UserStats stats;
 
     @PrePersist
     protected void onCreate() {
