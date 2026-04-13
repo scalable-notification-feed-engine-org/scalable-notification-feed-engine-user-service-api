@@ -23,9 +23,5 @@ public class UserStats {
     @Column(name = "following_count", nullable = false)
     private long followingCount = 0;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "user_id")
-    private User user;
 
 }
