@@ -30,6 +30,9 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -59,6 +62,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional
     public void createUser(UserRequestDto dto) {
         String userId;
         Keycloak keycloak;
@@ -87,6 +91,8 @@ public class UserServiceImpl implements UserService {
             keycloak.realm(realm).users().get(userId).roles().realmLevel().add(Collections.singletonList(userRole));
             UserRepresentation createUser = keycloak.realm(realm).users().get(userId).toRepresentation();
 
+         try{
+
             User user = User.builder()
                     .id(UUID.randomUUID())
                     .keycloakId(createUser.getId())
@@ -106,15 +112,23 @@ public class UserServiceImpl implements UserService {
 
             User savedUser = userRepository.save(user);
 
-            try{
-                String otp = redisService.saveOtp(savedUser.getEmail());
+             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                 @Override
+                 public void afterCommit() {
+                     try {
+                         String otp = redisService
+                                 .saveOtp(savedUser.getEmail());
 
-                eventPublisher
-                        .publishUserSendOtp(objectMapper.toCreateEvent(savedUser,otp));
+                         eventPublisher
+                                 .publishUserSendOtp(objectMapper.toCreateEvent(savedUser,otp));
+                     }catch (Exception e){
+                        log.error("Failed to publish user created event", e);
+                     }
+                 }
+             });
 
             }catch (Exception e){
-                log.error("Failed to publish user created event", e);
-
+             keycloakConfig.keycloak().realm(realm).users().delete(userId);
             }
         }
     }
@@ -307,7 +321,6 @@ public class UserServiceImpl implements UserService {
         if (byEmail.isEmpty()) {
             throw new NotFoundException("User was not found");
         }
-
 
         return UserResponseDto.builder()
                 .email(byEmail.get().getEmail())
