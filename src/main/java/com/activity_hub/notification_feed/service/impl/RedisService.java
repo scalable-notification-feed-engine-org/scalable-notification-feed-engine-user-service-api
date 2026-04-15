@@ -20,6 +20,10 @@ public class RedisService {
         return otp;
     }
 
+    public String getValue(String email) {
+        return redisTemplate.opsForValue().get(email);
+    }
+
     public boolean verifyAndDeleteOtp(String email, String userOtp) {
 
         String storedOtp = redisTemplate.opsForValue().get(email);
