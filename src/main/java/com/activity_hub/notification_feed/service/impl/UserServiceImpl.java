@@ -129,6 +129,7 @@ public class UserServiceImpl implements UserService {
 
             }catch (Exception e){
              keycloakConfig.keycloak().realm(realm).users().delete(userId);
+             throw new BadRequestException("Error while saving user");
             }
         }
     }
