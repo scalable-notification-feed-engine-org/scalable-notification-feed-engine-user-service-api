@@ -87,7 +87,6 @@ public class UserController {
             @RequestParam String email,
             @RequestParam String otp
     ){
-
         boolean isVerified = systemUserService.verifyEmail(otp,email);
         return new ResponseEntity<>(
                 new StandardResponseDto(isVerified?200:400,isVerified?"Verified":"try Again",isVerified),
