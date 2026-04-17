@@ -27,6 +27,7 @@ public class ObjectMapper {
       if(dto == null) return null;
       UserRepresentation user = new UserRepresentation();
       user.setEmail(dto.getEmail());
+      user.setUsername(dto.getEmail());
       user.setFirstName(dto.getFirstName());
       user.setLastName(dto.getLastName());
       user.setEnabled(isEnable);
@@ -36,6 +37,7 @@ public class ObjectMapper {
       credential.setTemporary(false);
       credential.setValue(dto.getPassword());
       credentialList.add(credential);
+      credential.setType(CredentialRepresentation.PASSWORD);
       user.setCredentials(credentialList);
       return user;
     }
