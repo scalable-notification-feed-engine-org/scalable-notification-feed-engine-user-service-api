@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "outbox_events")
+@Table(name = "outbox_events", indexes = {
+        @Index(name = "idx_outbox_status_create_at" , columnList = "status, createdAt")
+})
 @Getter
 @Setter
 @AllArgsConstructor
