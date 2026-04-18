@@ -118,7 +118,7 @@ public class UserServiceImpl implements UserService {
                      try {
                          String otp = redisService
                                  .saveOtp(savedUser.getEmail());
-
+                         System.out.println("OTP : " + otp);
                          eventPublisher
                                  .publishUserSendOtp(objectMapper.toCreateEvent(savedUser,otp));
                      }catch (Exception e){
