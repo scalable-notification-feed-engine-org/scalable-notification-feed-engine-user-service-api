@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -82,7 +83,7 @@ public class ObjectMapper {
 
     public UserResponseDto mapToUserResponse(User user) {
         return UserResponseDto.builder()
-                .id(user.getId())
+                .id(UUID.fromString(user.getKeycloakId()))
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
