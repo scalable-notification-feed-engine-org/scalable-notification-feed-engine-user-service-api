@@ -330,5 +330,13 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    @Override
+    public List<UserResponseDto> getAllUsers() {
+        List<User> allUsers = userRepository.findAllUsers();
+        List<UserResponseDto> list = allUsers.stream().map(objectMapper::mapToUserResponse).toList();
+        System.out.println("All users " + list);
+        return list;
+    }
+
 
 }
