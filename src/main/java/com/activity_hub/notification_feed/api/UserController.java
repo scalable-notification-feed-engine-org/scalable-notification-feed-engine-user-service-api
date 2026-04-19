@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 
 @RestController
@@ -114,6 +115,21 @@ public class UserController {
         String email = jwtService.getEmail(token);
 
         UserResponseDto userDetails = systemUserService.getUserDetails(email);
+
+        return new ResponseEntity<>(
+                new StandardResponseDto(200,
+                        "user details!", userDetails),
+                HttpStatus.OK
+        );
+    }
+
+
+    @GetMapping("/get-all-user-details")
+//    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    public ResponseEntity<StandardResponseDto> getUserAllDetails(
+
+    ) {
+        List<UserResponseDto> userDetails = systemUserService.getAllUsers();
 
         return new ResponseEntity<>(
                 new StandardResponseDto(200,
