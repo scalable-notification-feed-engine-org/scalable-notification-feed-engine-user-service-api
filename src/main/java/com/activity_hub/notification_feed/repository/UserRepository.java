@@ -21,4 +21,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             "FROM User u LEFT JOIN UserAvatar a ON u.id = a.user.id " +
             "WHERE u.id IN :ids")
     List<UserMetadataResponseDTO> findAllMetadataByIds(@Param("ids") List<UUID> ids);
+
+    @Query(value = "SELECT * FROM users", nativeQuery = true)
+    List<User> findAllUsers();
+
 }
