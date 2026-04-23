@@ -36,7 +36,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -311,7 +310,6 @@ public class UserServiceImpl implements UserService {
             keyCloakUser.setLastName(data.getLastName());
             byEmail.get().setFirstName(data.getFirstName());
             byEmail.get().setLastName(data.getLastName());
-            System.out.println("Keycloak user " + keyCloakUser.getFirstName());
             userRepository.save(systemUser);
         }
     }
@@ -324,6 +322,7 @@ public class UserServiceImpl implements UserService {
         }
 
         return UserResponseDto.builder()
+                .id(byEmail.get().getId())
                 .email(byEmail.get().getEmail())
                 .firstName(byEmail.get().getFirstName())
                 .lastName(byEmail.get().getLastName())
@@ -334,7 +333,6 @@ public class UserServiceImpl implements UserService {
     public List<UserResponseDto> getAllUsers() {
         List<User> allUsers = userRepository.findAllUsers();
         List<UserResponseDto> list = allUsers.stream().map(objectMapper::mapToUserResponse).toList();
-        System.out.println("All users " + list);
         return list;
     }
 
