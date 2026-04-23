@@ -25,12 +25,12 @@ public class UserController {
 
     @PostMapping("/visitors/signup")
     public ResponseEntity<StandardResponseDto> createUser(
-                @RequestBody UserRequestDto dto
-    ){
+            @RequestBody UserRequestDto dto
+    ) {
         System.out.println("createUser");
         systemUserService.createUser(dto);
         return new ResponseEntity<>(
-                new StandardResponseDto(201,"user account was created",null),
+                new StandardResponseDto(201, "user account was created", null),
                 HttpStatus.CREATED
         );
     }
@@ -39,10 +39,10 @@ public class UserController {
     public ResponseEntity<StandardResponseDto> resend(
             @RequestParam String email,
             @RequestParam String type
-    ){
+    ) {
         systemUserService.resend(email, type);
         return new ResponseEntity<>(
-                new StandardResponseDto(200,"please check you email",null),
+                new StandardResponseDto(200, "please check you email", null),
                 HttpStatus.OK
         );
     }
@@ -50,10 +50,10 @@ public class UserController {
     @PostMapping("/visitors/forgot-password-request-code")
     public ResponseEntity<StandardResponseDto> forgotPasswordRequest(
             @RequestParam String email
-    ){
+    ) {
         systemUserService.forgotPasswordSendVerificationCode(email);
         return new ResponseEntity<>(
-                new StandardResponseDto(200,"please check you email",null),
+                new StandardResponseDto(200, "please check you email", null),
                 HttpStatus.OK
         );
     }
@@ -62,24 +62,24 @@ public class UserController {
     public ResponseEntity<StandardResponseDto> verifyReset(
             @RequestParam String email,
             @RequestParam String otp
-    ){
+    ) {
 
-        boolean isVerified = systemUserService.verifyReset(otp,email);
+        boolean isVerified = systemUserService.verifyReset(otp, email);
         return new ResponseEntity<>(
-                new StandardResponseDto(isVerified?200:400,isVerified?"Verified":"try Again",isVerified),
-                isVerified?HttpStatus.OK:HttpStatus.BAD_REQUEST
+                new StandardResponseDto(isVerified ? 200 : 400, isVerified ? "Verified" : "try Again", isVerified),
+                isVerified ? HttpStatus.OK : HttpStatus.BAD_REQUEST
         );
     }
 
     @PostMapping("/visitors/reset-password")
     public ResponseEntity<StandardResponseDto> resetPassword(
             @RequestBody PasswordRequestDto dto
-    ){
+    ) {
 
         boolean isChanged = systemUserService.passwordReset(dto);
         return new ResponseEntity<>(
-                new StandardResponseDto(isChanged?201:400,isChanged?"CHANGED":"try Again",isChanged),
-                isChanged?HttpStatus.CREATED:HttpStatus.BAD_REQUEST
+                new StandardResponseDto(isChanged ? 201 : 400, isChanged ? "CHANGED" : "try Again", isChanged),
+                isChanged ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST
         );
     }
 
@@ -87,45 +87,42 @@ public class UserController {
     public ResponseEntity<StandardResponseDto> verifyEmail(
             @RequestParam String email,
             @RequestParam String otp
-    ){
-        boolean isVerified = systemUserService.verifyEmail(otp,email);
+    ) {
+        boolean isVerified = systemUserService.verifyEmail(otp, email);
         return new ResponseEntity<>(
-                new StandardResponseDto(isVerified?200:400,isVerified?"Verified":"try Again",isVerified),
-                isVerified?HttpStatus.OK:HttpStatus.BAD_REQUEST
+                new StandardResponseDto(isVerified ? 200 : 400, isVerified ? "Verified" : "try Again", isVerified),
+                isVerified ? HttpStatus.OK : HttpStatus.BAD_REQUEST
         );
     }
 
     @PostMapping("/visitors/login")
     public ResponseEntity<StandardResponseDto> login(
             @RequestBody LoginRequestDto dto
-    ){
+    ) {
 
         return new ResponseEntity<>(
-                new StandardResponseDto(200,"success",systemUserService.login(dto)),
+                new StandardResponseDto(200, "success", systemUserService.login(dto)),
                 HttpStatus.OK
         );
     }
 
     @GetMapping("/get-user-details")
-    @PreAuthorize("hasAnyRole('CUSTOMER','SUPER_ADMIN')")
-    public ResponseEntity<StandardResponseDto> getUserDetails(
-            @RequestHeader("Authorization") String tokenHeader
-    ) {
+    @PreAuthorize("hasAnyRole('USER,SUPER_ADMIN')")
+    public ResponseEntity<StandardResponseDto> getUserDetails(@RequestHeader("Authorization") String tokenHeader) {
+
         String token = tokenHeader.replace("Bearer ", "");
         String email = jwtService.getEmail(token);
-
         UserResponseDto userDetails = systemUserService.getUserDetails(email);
 
         return new ResponseEntity<>(
-                new StandardResponseDto(200,
-                        "user details!", userDetails),
+                new StandardResponseDto(200, "user details!", userDetails),
                 HttpStatus.OK
         );
+
     }
 
-
     @GetMapping("/get-all-user-details")
-//    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<StandardResponseDto> getUserAllDetails(
 
     ) {
@@ -139,7 +136,7 @@ public class UserController {
     }
 
     @PostMapping("/update-user-details")
-    @PreAuthorize("hasAnyRole('CUSTOMER','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','SUPER_ADMIN')")
     public ResponseEntity<StandardResponseDto> updateUserDetails(
             @RequestHeader("Authorization") String tokenHeader,
             @RequestBody UserUpdateRequestDto dto
