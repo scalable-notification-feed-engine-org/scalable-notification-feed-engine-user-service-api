@@ -107,7 +107,7 @@ public class UserController {
     }
 
     @GetMapping("/get-user-details")
-    @PreAuthorize("hasAnyRole('USER,SUPER_ADMIN')")
+//    @PreAuthorize("hasAnyRole('USER,SUPER_ADMIN')")
     public ResponseEntity<StandardResponseDto> getUserDetails(@RequestHeader("Authorization") String tokenHeader) {
 
         String token = tokenHeader.replace("Bearer ", "");
@@ -122,7 +122,7 @@ public class UserController {
     }
 
     @GetMapping("/get-all-user-details")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+//    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<StandardResponseDto> getUserAllDetails(
 
     ) {
