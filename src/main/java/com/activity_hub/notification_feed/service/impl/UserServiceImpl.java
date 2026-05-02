@@ -97,6 +97,7 @@ public class UserServiceImpl implements UserService {
                     .keycloakId(createUser.getId())
                     .email(dto.getEmail())
                     .firstName(dto.getFirstName())
+                    .tenantId("00000000-0000-0000-0000-000000000000")
                     .lastName(dto.getLastName())
                     .contact(dto.getContact())
                     .status(UserStatus.PENDING)
