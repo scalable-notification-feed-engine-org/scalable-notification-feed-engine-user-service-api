@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -27,7 +29,6 @@ public class UserController {
     public ResponseEntity<StandardResponseDto> createUser(
             @RequestBody UserRequestDto dto
     ) {
-        System.out.println("createUser");
         systemUserService.createUser(dto);
         return new ResponseEntity<>(
                 new StandardResponseDto(201, "user account was created", null),
@@ -107,11 +108,10 @@ public class UserController {
     }
 
     @GetMapping("/get-user-details")
-//    @PreAuthorize("hasAnyRole('USER,SUPER_ADMIN')")
-    public ResponseEntity<StandardResponseDto> getUserDetails(@RequestHeader("Authorization") String tokenHeader) {
+    @PreAuthorize("hasAnyRole('USER,SUPER_ADMIN')")
+    public ResponseEntity<StandardResponseDto> getUserDetails(@AuthenticationPrincipal Jwt jwt) {
 
-        String token = tokenHeader.replace("Bearer ", "");
-        String email = jwtService.getEmail(token);
+        String email = jwt.getClaimAsString("email");
         UserResponseDto userDetails = systemUserService.getUserDetails(email);
 
         return new ResponseEntity<>(
@@ -122,11 +122,12 @@ public class UserController {
     }
 
     @GetMapping("/get-all-user-details")
-//    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<StandardResponseDto> getUserAllDetails(
-
+            @RequestParam int page,
+            @RequestParam int size
     ) {
-        List<UserResponseDto> userDetails = systemUserService.getAllUsers();
+        List<UserResponseDto> userDetails = systemUserService.getAllUsers(page,size);
 
         return new ResponseEntity<>(
                 new StandardResponseDto(200,
