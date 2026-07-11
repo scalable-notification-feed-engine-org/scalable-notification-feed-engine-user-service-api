@@ -1,6 +1,7 @@
 package com.activity_hub.notification_feed.service.impl;
 
 import com.activity_hub.notification_feed.config.KeycloakConfig;
+import com.activity_hub.notification_feed.context.TenantContext;
 import com.activity_hub.notification_feed.dto.request.LoginRequestDto;
 import com.activity_hub.notification_feed.dto.request.PasswordRequestDto;
 import com.activity_hub.notification_feed.dto.request.UserRequestDto;
@@ -21,6 +22,8 @@ import com.activity_hub.notification_feed.util.ObjectMapper;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.*;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -58,14 +61,18 @@ public class UserServiceImpl implements UserService {
     private final ObjectMapper objectMapper;
     private final EventPublisher eventPublisher;
     private final RedisService redisService;
+    private final RestTemplate restTemplate;
 
+    private static final String GLOBAL_TENANT = "00000000-0000-0000-0000-000000000000";
 
     @Override
     @Transactional
     public void createUser(UserRequestDto dto) {
+        String tenantId = TenantContext.getCurrentTenant() != null ? TenantContext.getCurrentTenant() : GLOBAL_TENANT;
         String userId;
         Keycloak keycloak;
         UserRepresentation existingUser;
+        String uniqueUsername = tenantId + "_" + dto.getEmail();
 
         keycloak = keycloakConfig.keycloak();
 
@@ -97,7 +104,7 @@ public class UserServiceImpl implements UserService {
                     .keycloakId(createUser.getId())
                     .email(dto.getEmail())
                     .firstName(dto.getFirstName())
-                    .tenantId("00000000-0000-0000-0000-000000000000")
+                    .tenantId(tenantId)
                     .lastName(dto.getLastName())
                     .contact(dto.getContact())
                     .status(UserStatus.PENDING)
@@ -146,11 +153,13 @@ public class UserServiceImpl implements UserService {
         requestBody.add("username", dto.getEmail());
         requestBody.add("password", dto.getPassword());
 
-        RestTemplate restTemplate = new RestTemplate();
+
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
+
+            User user = objectMapper.validateRegularUserLogin(dto.getEmail());
             ResponseEntity<Map> response = restTemplate.exchange(
                     keycloakApiTokenUri,
                     HttpMethod.POST,
@@ -167,7 +176,6 @@ public class UserServiceImpl implements UserService {
                     .tokenType((String) tokenResponse.get("token_type"))
                     .build();
 
-            User user = objectMapper.validateRegularUserLogin(dto.getEmail());
             loginResponse.setUser(objectMapper.mapToUserResponse(user));
 
             return  loginResponse;
@@ -256,6 +264,7 @@ public class UserServiceImpl implements UserService {
             UserResource userResource = keycloak.realm(realm).users().get(keycloakUser.getId());
             CredentialRepresentation newPassword = new CredentialRepresentation();
             newPassword.setType(CredentialRepresentation.PASSWORD);
+            newPassword.setValue(dto.getPassword());
             newPassword.setTemporary(false);
             userResource.resetPassword(newPassword);
 
@@ -331,8 +340,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers() {
-        List<User> allUsers = userRepository.findAllUsers();
+    public List<UserResponseDto> getAllUsers(int page, int size) {
+        String tenantId = TenantContext.getCurrentTenant();
+        Page<User> allUsers = userRepository.findAllUsersByTenantId(tenantId, PageRequest.of(page,size));
         return allUsers.stream().map(objectMapper::mapToUserResponse).toList();
     }
 
