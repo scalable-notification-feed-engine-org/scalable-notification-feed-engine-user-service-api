@@ -82,12 +82,8 @@ public class FollowUserImpl implements FollowService {
             throw new BadRequestException("Already unfollowed this user");
         }
 
-        System.out.println("Unfollowing user " + selectedFollow.getFollowType());
-
         selectedFollow.setFollowType(FollowType.UNFOLLOW);
         Follow follow = followRepository.saveAndFlush(selectedFollow);
-        System.out.println("Status after update: " + follow.getFollowType());
-
         saveToOutbox(follow,FollowType.UNFOLLOW);
 
     }
