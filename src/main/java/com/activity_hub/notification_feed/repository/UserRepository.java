@@ -4,6 +4,8 @@ import com.activity_hub.notification_feed.dto.response.UserMetadataResponseDTO;
 import com.activity_hub.notification_feed.entity.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +24,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             "WHERE u.id IN :ids")
     List<UserMetadataResponseDTO> findAllMetadataByIds(@Param("ids") List<UUID> ids);
 
-    @Query(value = "SELECT * FROM users", nativeQuery = true)
-    List<User> findAllUsers();
+    Optional<User> findByEmailAndTenantId(String email, String tenantId);
+
+    @Query(value = "SELECT * FROM users WHERE tenant_id: tenantId", nativeQuery = true)
+    Page<User> findAllUsersByTenantId(String tenantId, Pageable pageable);
 
 }
