@@ -20,7 +20,7 @@ public class ProfileImageController {
 
     @PostMapping("/presigned-url")
     public ResponseEntity<PresignedUrlResponseDto> getUploadUrl(
-            @RequestHeader("X-User-Id") String loggedInUserId, // JWT එකෙන් Gateway එක හරහා එන ID එක
+            @RequestHeader("X-User-Id") String loggedInUserId,
             @RequestBody PresignedUrlRequestDto request) {
 
         String objectKey = String.format("profiles/%s/%s_%s", 
