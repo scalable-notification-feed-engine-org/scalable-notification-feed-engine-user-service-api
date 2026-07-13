@@ -17,7 +17,7 @@ import java.util.UUID;
         @Index(name = "idx_users_email_tenat", columnList = "email, tenant_id", unique = true)
 })
 public class User {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
@@ -81,6 +81,9 @@ public class User {
             updatable = false
     )
     private UserStats stats;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private UserProfile userProfile;
 
     @PrePersist
     protected void onCreate() {
