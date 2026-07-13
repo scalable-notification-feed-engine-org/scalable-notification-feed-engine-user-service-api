@@ -340,9 +340,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers(int page, int size) {
-        String tenantId = TenantContext.getCurrentTenant();
-        Page<User> allUsers = userRepository.findAllUsersByTenantId(tenantId, PageRequest.of(page,size));
+    public List<UserResponseDto> getAllUsers(String searchText) {
+        List<User> allUsers = userRepository.findByFirstNameIgnoreCase(searchText);
         return allUsers.stream().map(objectMapper::mapToUserResponse).toList();
     }
 
