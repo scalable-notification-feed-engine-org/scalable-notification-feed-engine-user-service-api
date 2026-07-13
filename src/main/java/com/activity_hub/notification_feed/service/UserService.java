@@ -18,5 +18,5 @@ public interface UserService {
    boolean verifyEmail(String otp, String email);
    void updateUserDetails(String email, UserUpdateRequestDto data);
    UserResponseDto getUserDetails(String email);
-   List<UserResponseDto> getAllUsers(int page, int size);
+   List<UserResponseDto> getAllUsers(String searchText);
 }
