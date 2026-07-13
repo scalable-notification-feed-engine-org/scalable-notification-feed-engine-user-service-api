@@ -120,15 +120,12 @@ public class UserController {
         );
 
     }
-
-    @GetMapping("/get-all-user-details")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @GetMapping("/visitors/get-all-user-details")
     public ResponseEntity<StandardResponseDto> getUserAllDetails(
-            @RequestParam int page,
-            @RequestParam int size
+            @RequestParam String searchText
     ) {
-        List<UserResponseDto> userDetails = systemUserService.getAllUsers(page,size);
 
+        List<UserResponseDto> userDetails = systemUserService.getAllUsers(searchText);
         return new ResponseEntity<>(
                 new StandardResponseDto(200,
                         "user details!", userDetails),
@@ -153,5 +150,7 @@ public class UserController {
                 HttpStatus.CREATED
         );
     }
+
+
 
 }
