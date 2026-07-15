@@ -83,7 +83,7 @@ public class ObjectMapper {
 
     public UserResponseDto mapToUserResponse(User user) {
         return UserResponseDto.builder()
-                .id(UUID.fromString(user.getKeycloakId()))
+                .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
