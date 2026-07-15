@@ -5,11 +5,13 @@ import com.activity_hub.notification_feed.dto.request.ProfileUpdateRequestDto;
 import com.activity_hub.notification_feed.dto.response.ProfileResponseDto;
 import com.activity_hub.notification_feed.service.impl.ProfileService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/user-service/api/v1/profiles")
 public class ProfileController {
@@ -39,7 +41,6 @@ public class ProfileController {
     public ResponseEntity<ProfileResponseDto> getProfile(
             @PathVariable("userId") String targetUserId,
             @RequestHeader("X-User-Id") String loggedInUserId) {
-
         ProfileResponseDto profile = profileService.getProfile(
                 UUID.fromString(targetUserId),
                 UUID.fromString(loggedInUserId)
