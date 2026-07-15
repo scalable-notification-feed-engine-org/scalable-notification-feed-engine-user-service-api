@@ -1,5 +1,6 @@
 package com.activity_hub.notification_feed.service.impl;
 
+import com.activity_hub.notification_feed.dto.response.PresignedUrlResponseDto;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -13,16 +14,14 @@ import java.util.UUID;
 public class ProfileImageService {
 
     private final S3Presigner s3Presigner;
-    private final String bucketName = "voxa-profile-bucket";
 
     public ProfileImageService(S3Presigner s3Presigner) {
         this.s3Presigner = s3Presigner;
     }
 
-    public String generatePresignedUploadUrl(String userId, String imageType, String contentType) {
-
+    public PresignedUrlResponseDto generatePresignedUploadUrl(String userId, String imageType, String contentType) {
         String objectKey = String.format("profiles/%s/%s_%s", userId, imageType, UUID.randomUUID());
-
+        String bucketName = "voxa-profile-bucket";
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(objectKey)
@@ -36,6 +35,6 @@ public class ProfileImageService {
 
         PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
 
-        return presignedRequest.url().toString();
+        return new PresignedUrlResponseDto(presignedRequest.url().toString(), objectKey);
     }
 }
