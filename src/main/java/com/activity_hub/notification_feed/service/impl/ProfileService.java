@@ -5,11 +5,13 @@ import com.activity_hub.notification_feed.dto.request.ProfileUpdateRequestDto;
 import com.activity_hub.notification_feed.dto.response.ProfileResponseDto;
 import com.activity_hub.notification_feed.entity.User;
 import com.activity_hub.notification_feed.entity.UserProfile;
-import com.activity_hub.notification_feed.repository.UserRepository;
+import com.activity_hub.notification_feed.exception.NotFoundException;
 import com.activity_hub.notification_feed.repository.UserProfileRepository;
+import com.activity_hub.notification_feed.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @Service
@@ -28,89 +30,90 @@ public class ProfileService {
     }
 
     public void saveProfile(ProfileSaveRequestDto request) {
-        UUID userUuid = UUID.fromString(request.getId());
 
-        if (profileRepository.existsById(userUuid)) {
-            throw new IllegalStateException("Profile already exists for this user ID");
+        User user = userRepository.findById(UUID.fromString(request.getId()))
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getId()));
+
+        UUID actualPk = UUID.fromString(user.getKeycloakId());
+
+        if (profileRepository.existsById(actualPk)) {
+            throw new IllegalStateException("Profile already exists for this user");
         }
 
-        User user = userRepository.findById(userUuid)
-                .orElseThrow(() -> new RuntimeException("Core User not found with ID: " + userUuid));
-
-        UserProfile newProfile = UserProfile.builder()
-                .id(userUuid)
-                .name(request.getName())
-                .aliasName(request.getAliasName())
-                .bioLines(request.getBioLines())
-                .category(request.getCategory())
-                .location(request.getLocation())
-                .avatarImageKey(request.getAvatarImageKey())
-                .coverImageKey(request.getCoverImageKey())
-                .isVerified(false)
-                .user(user)
-                .build();
-
-        profileRepository.save(newProfile);
-    }
-
-    public void updateProfile(UUID userId, ProfileUpdateRequestDto request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-
-        UserProfile profile = profileRepository.findById(userId)
-                .orElseGet(() -> {
-                    UserProfile newProfile = new UserProfile();
-                    newProfile.setId(userId);
-                    newProfile.setUser(user);
-                    return newProfile;
-                });
-
-        if (request.getName() != null && !request.getName().trim().isEmpty()) {
-            String fullName = request.getName().trim();
-            String firstName = "";
-            String lastName = "";
-
-            int firstSpaceIndex = fullName.indexOf(" ");
-            if (firstSpaceIndex != -1) {
-                firstName = fullName.substring(0, firstSpaceIndex);
-                lastName = fullName.substring(firstSpaceIndex + 1);
-            } else {
-
-                firstName = fullName;
-                lastName = "";
-            }
-
-            user.setFirstName(firstName);
-            user.setLastName(lastName);
-
-        }
+        UserProfile profile = new UserProfile();
+        profile.setId(actualPk);
         profile.setName(request.getName());
         profile.setAliasName(request.getAliasName());
         profile.setBioLines(request.getBioLines());
         profile.setCategory(request.getCategory());
         profile.setLocation(request.getLocation());
+        profile.setAvatarImageKey(request.getAvatarImageKey());
+        profile.setCoverImageKey(request.getCoverImageKey());
+        profile.setVerified(false);
+        profile.setUser(user);
 
-        if (request.getAvatarImageKey() != null) {
+        user.setUserProfile(profile);
+
+        profileRepository.save(profile);
+    }
+
+    public void updateProfile(UUID userId, ProfileUpdateRequestDto request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with"));
+
+        UUID actualPk = UUID.fromString(user.getKeycloakId());
+
+        UserProfile profile = user.getUserProfile();
+        if (profile == null) {
+            profile = new UserProfile();
+            profile.setId(actualPk);
+            profile.setUser(user);
+            profile.setVerified(false);
+            user.setUserProfile(profile);
+        }
+
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            String fullName = request.getName().trim();
+            int firstSpaceIndex = fullName.indexOf(" ");
+
+            if (firstSpaceIndex != -1) {
+                user.setFirstName(fullName.substring(0, firstSpaceIndex));
+                user.setLastName(fullName.substring(firstSpaceIndex + 1));
+            } else {
+                user.setFirstName(fullName);
+                user.setLastName("");
+            }
+        }
+
+        if (request.getName() != null) profile.setName(request.getName());
+        if (request.getAliasName() != null) profile.setAliasName(request.getAliasName());
+        if (request.getBioLines() != null) profile.setBioLines(request.getBioLines());
+        if (request.getCategory() != null) profile.setCategory(request.getCategory());
+        if (request.getLocation() != null) profile.setLocation(request.getLocation());
+
+        if (request.getAvatarImageKey() != null && !request.getAvatarImageKey().startsWith("blob:")) {
             profile.setAvatarImageKey(request.getAvatarImageKey());
         }
-        if (request.getCoverImageKey() != null) {
+
+        if (request.getCoverImageKey() != null && !request.getCoverImageKey().startsWith("blob:")) {
             profile.setCoverImageKey(request.getCoverImageKey());
         }
 
-        profileRepository.save(profile);
     }
 
     @Transactional(readOnly = true)
     public ProfileResponseDto getProfile(UUID targetUserId, UUID currentUserId) {
         UserProfile profile = profileRepository.findById(targetUserId)
-                .orElseThrow(() -> new RuntimeException("Profile not found for ID: " + targetUserId));
+                .orElseThrow(() -> new NotFoundException("Profile not found for ID: " + targetUserId));
 
         long followers = 0;
-        long javaFollowing = 0;
+        long following = 0;
+
         if (profile.getUser().getStats() != null) {
-             followers = profile.getUser().getStats().getFollowerCount();
+            followers = profile.getUser().getStats().getFollowerCount();
+            following = profile.getUser().getStats().getFollowingCount();
         }
-        
+
         String avatarUrl = (profile.getAvatarImageKey() != null)
                 ? cdnBaseUrl + profile.getAvatarImageKey()
                 : "https://picsum.photos/seed/voxa-avatar/200/200";
@@ -118,7 +121,6 @@ public class ProfileService {
         String coverUrl = (profile.getCoverImageKey() != null)
                 ? cdnBaseUrl + profile.getCoverImageKey()
                 : "https://picsum.photos/seed/voxa-cover/1600/500";
-
 
         return ProfileResponseDto.builder()
                 .id(profile.getId().toString())
@@ -128,8 +130,8 @@ public class ProfileService {
                 .avatarImageUrl(avatarUrl)
                 .coverImageUrl(coverUrl)
                 .followersCount(followers)
-                .followingCount(javaFollowing)
-                .bioLines(profile.getBioLines())
+                .followingCount(following)
+                .bioLines(profile.getBioLines() != null ? new ArrayList<>(profile.getBioLines()) : new ArrayList<>())
                 .category(profile.getCategory())
                 .location(profile.getLocation())
                 .isOwnProfile(targetUserId.equals(currentUserId))
