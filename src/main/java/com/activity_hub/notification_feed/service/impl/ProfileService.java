@@ -116,11 +116,11 @@ public class ProfileService {
 
         String avatarUrl = (profile.getAvatarImageKey() != null)
                 ? cdnBaseUrl + profile.getAvatarImageKey()
-                : "https://picsum.photos/seed/voxa-avatar/200/200";
+                : "";
 
         String coverUrl = (profile.getCoverImageKey() != null)
                 ? cdnBaseUrl + profile.getCoverImageKey()
-                : "https://picsum.photos/seed/voxa-cover/1600/500";
+                : "";
 
         return ProfileResponseDto.builder()
                 .id(profile.getId().toString())
