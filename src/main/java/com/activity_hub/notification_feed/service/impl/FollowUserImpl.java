@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,7 +35,6 @@ public class FollowUserImpl implements FollowService {
     @Override
     @Transactional
     public void followUser(UUID followerId, UUID followeeId) {
-
         validateUsers(followerId, followeeId);
 
         Optional<Follow> selectedFollow = followRepository
@@ -47,7 +47,7 @@ public class FollowUserImpl implements FollowService {
             followRecord = selectedFollow.get();
 
             if(followRecord.getFollowType() == FollowType.FOLLOW) {
-                throw new BadRequestException("Follow already exists");
+                return;
             }
 
             followRecord.setFollowType(FollowType.FOLLOW);
@@ -88,13 +88,31 @@ public class FollowUserImpl implements FollowService {
 
     }
 
+    @Override
+    public boolean check(UUID userId, UUID followeeId) {
+        if (userId == null || followeeId == null){
+            throw new BadRequestException("User IDs must not be null");
+        }
+        List<UUID> ids =new ArrayList<>();
+        ids.add(userId);
+        ids.add(followeeId);
+        List<User> users =  userRepository.findAllById(ids);
+
+        if (users.size() != 2){
+            throw new NotFoundException("One or both users not founs");
+        }
+
+          return followRepository
+                 .existsByFollowerIdAndFolloweeIdAndFollowType(userId, followeeId, FollowType.FOLLOW);
+
+    }
+
     private void validateUsers(UUID followerId, UUID followeeId){
         if(followerId.equals(followeeId)) {
             throw new BadRequestException("User cannot follow/unfollow themselves");
         }
 
         List<UUID> ids = List.of(followerId, followeeId);
-
         List<User> selectUsers = userRepository.findAllById(ids);
 
         if(selectUsers.size() < 2) {
