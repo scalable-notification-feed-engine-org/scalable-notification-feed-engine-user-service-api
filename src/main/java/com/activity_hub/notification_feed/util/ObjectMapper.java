@@ -12,11 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
 
 @Component
 @RequiredArgsConstructor
@@ -71,7 +70,7 @@ public class ObjectMapper {
 
 
         if (user.getStatus() == UserStatus.BLOCKED || user.getStatus() == UserStatus.SUSPENDED) {
-            throw new UnAuthorizedException("Your account has been " + user.getStatus());
+            throw new UnAuthorizedException(STR."Your account has been \{user.getStatus()}");
         }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
