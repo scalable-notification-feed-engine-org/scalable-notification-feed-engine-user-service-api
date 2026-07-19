@@ -7,7 +7,6 @@ import com.activity_hub.notification_feed.dto.request.UserUpdateRequestDto;
 import com.activity_hub.notification_feed.dto.response.LoginResponseDto;
 import com.activity_hub.notification_feed.dto.response.UserResponseDto;
 import java.util.List;
-import java.util.UUID;
 
 public interface UserService {
    void createUser(UserRequestDto dto);
@@ -19,5 +18,5 @@ public interface UserService {
    boolean verifyEmail(String otp, String email);
    void updateUserDetails(String email, UserUpdateRequestDto data);
    UserResponseDto getUserDetails(String email);
-   List<UserResponseDto> getAllUsers(String searchText, UUID userId);
+   List<UserResponseDto> getAllUsers(String searchText);
 }
