@@ -22,8 +22,6 @@ import com.activity_hub.notification_feed.util.ObjectMapper;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.*;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -178,10 +176,10 @@ public class UserServiceImpl implements UserService {
 
             loginResponse.setUser(objectMapper.mapToUserResponse(user));
 
-            return  loginResponse;
+            return loginResponse;
 
         }catch (Exception ex){
-            throw new KeycloakException("Login failed: " + ex.getMessage(), ex);
+            throw new KeycloakException(STR."Login failed: \{ex.getMessage()}", ex);
         }
 
     }
@@ -260,7 +258,7 @@ public class UserServiceImpl implements UserService {
         List<UserRepresentation> keycloakUsers = keycloak.realm(realm).users().search(selectedUser.getEmail());
 
         if(!keycloakUsers.isEmpty() && dto.getCode().equals(redisService.getValue(selectedUser.getEmail()))){
-            UserRepresentation keycloakUser = keycloakUsers.get(0);
+            UserRepresentation keycloakUser = keycloakUsers.getFirst();
             UserResource userResource = keycloak.realm(realm).users().get(keycloakUser.getId());
             CredentialRepresentation newPassword = new CredentialRepresentation();
             newPassword.setType(CredentialRepresentation.PASSWORD);
@@ -315,7 +313,7 @@ public class UserServiceImpl implements UserService {
         Keycloak keycloak = keycloakConfig.keycloak();
         List<UserRepresentation> keyCloakUsers = keycloak.realm(realm).users().search(systemUser.getEmail());
         if (!keyCloakUsers.isEmpty()) {
-            UserRepresentation keyCloakUser = keyCloakUsers.get(0);
+            UserRepresentation keyCloakUser = keyCloakUsers.getFirst();
             keyCloakUser.setFirstName(data.getFirstName());
             keyCloakUser.setLastName(data.getLastName());
             byEmail.get().setFirstName(data.getFirstName());
