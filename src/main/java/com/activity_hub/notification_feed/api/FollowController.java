@@ -4,11 +4,10 @@ import com.activity_hub.notification_feed.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/follows")
+@RequestMapping("/user-service/api/v1/follows")
 @RequiredArgsConstructor
 public class FollowController {
 
@@ -18,9 +17,9 @@ public class FollowController {
     public ResponseEntity<String> followUser(
             @RequestHeader("X-User-Id") UUID followerId,
             @PathVariable UUID followeeId) {
-        
+
         followService.followUser(followerId, followeeId);
-        
+
         return ResponseEntity.ok("Follow request processed successfully.");
     }
 
@@ -31,6 +30,13 @@ public class FollowController {
 
         followService.unfollowUser(followerId, followeeId);
 
-        return ResponseEntity.ok("Follow request processed successfully.");
+        return ResponseEntity.ok("Unfollow request processed successfully.");
+    }
+
+    @GetMapping("/check/{followeeId}")
+    public ResponseEntity<Boolean> check(@RequestHeader("X-User-Id") UUID userId,
+                                         @PathVariable UUID followeeId){
+        boolean isFollow = followService.check(userId, followeeId);
+        return ResponseEntity.ok(isFollow);
     }
 }
