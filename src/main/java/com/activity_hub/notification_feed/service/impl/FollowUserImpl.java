@@ -90,19 +90,7 @@ public class FollowUserImpl implements FollowService {
 
     @Override
     public boolean check(UUID userId, UUID followeeId) {
-        if (userId == null || followeeId == null){
-            throw new BadRequestException("User IDs must not be null");
-        }
-        List<UUID> ids =new ArrayList<>();
-        ids.add(userId);
-        ids.add(followeeId);
-        List<User> users =  userRepository.findAllById(ids);
-
-        if (users.size() != 2){
-            throw new NotFoundException("One or both users not founs");
-        }
-
-          return followRepository
+        return followRepository
                  .existsByFollowerIdAndFolloweeIdAndFollowType(userId, followeeId, FollowType.FOLLOW);
 
     }
