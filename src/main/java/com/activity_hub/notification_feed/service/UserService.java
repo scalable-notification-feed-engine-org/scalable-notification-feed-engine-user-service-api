@@ -1,9 +1,6 @@
 package com.activity_hub.notification_feed.service;
 
-import com.activity_hub.notification_feed.dto.request.LoginRequestDto;
-import com.activity_hub.notification_feed.dto.request.PasswordRequestDto;
-import com.activity_hub.notification_feed.dto.request.UserRequestDto;
-import com.activity_hub.notification_feed.dto.request.UserUpdateRequestDto;
+import com.activity_hub.notification_feed.dto.request.*;
 import com.activity_hub.notification_feed.dto.response.LoginResponseDto;
 import com.activity_hub.notification_feed.dto.response.UserResponseDto;
 import java.util.List;
@@ -18,5 +15,6 @@ public interface UserService {
    boolean verifyEmail(String otp, String email);
    void updateUserDetails(String email, UserUpdateRequestDto data);
    UserResponseDto getUserDetails(String email);
+   List<UserResponseDto> getUserDetailsByIds(List<String> ids);
    List<UserResponseDto> getAllUsers(String searchText);
 }
