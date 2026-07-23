@@ -2,10 +2,7 @@ package com.activity_hub.notification_feed.service.impl;
 
 import com.activity_hub.notification_feed.config.KeycloakConfig;
 import com.activity_hub.notification_feed.context.TenantContext;
-import com.activity_hub.notification_feed.dto.request.LoginRequestDto;
-import com.activity_hub.notification_feed.dto.request.PasswordRequestDto;
-import com.activity_hub.notification_feed.dto.request.UserRequestDto;
-import com.activity_hub.notification_feed.dto.request.UserUpdateRequestDto;
+import com.activity_hub.notification_feed.dto.request.*;
 import com.activity_hub.notification_feed.dto.response.LoginResponseDto;
 import com.activity_hub.notification_feed.dto.response.UserResponseDto;
 import com.activity_hub.notification_feed.entity.User;
@@ -39,6 +36,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -70,7 +68,6 @@ public class UserServiceImpl implements UserService {
         String userId;
         Keycloak keycloak;
         UserRepresentation existingUser;
-        String uniqueUsername = tenantId + "_" + dto.getEmail();
 
         keycloak = keycloakConfig.keycloak();
 
@@ -335,6 +332,19 @@ public class UserServiceImpl implements UserService {
                 .firstName(byEmail.get().getFirstName())
                 .lastName(byEmail.get().getLastName())
                 .build();
+    }
+
+    @Override
+    public List<UserResponseDto> getUserDetailsByIds(List<String> ids) {
+        List<UUID> uuidList = ids.stream()
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+        List<User> users = userRepository.findByIdIn(uuidList);
+
+       return users
+               .stream()
+               .map(objectMapper::mapToUserResponse)
+               .collect(Collectors.toList());
     }
 
     @Override
