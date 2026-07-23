@@ -28,4 +28,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       """)
     List<User> findByFirstNameIgnoreCase(@Param("searchText") String searchText);
 
+    List<User> findByIdIn(List<UUID> ids);
+
 }
