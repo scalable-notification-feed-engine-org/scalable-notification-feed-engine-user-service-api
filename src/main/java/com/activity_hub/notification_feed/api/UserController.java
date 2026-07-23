@@ -1,9 +1,6 @@
 package com.activity_hub.notification_feed.api;
 
-import com.activity_hub.notification_feed.dto.request.LoginRequestDto;
-import com.activity_hub.notification_feed.dto.request.PasswordRequestDto;
-import com.activity_hub.notification_feed.dto.request.UserRequestDto;
-import com.activity_hub.notification_feed.dto.request.UserUpdateRequestDto;
+import com.activity_hub.notification_feed.dto.request.*;
 import com.activity_hub.notification_feed.dto.response.UserResponseDto;
 import com.activity_hub.notification_feed.service.UserService;
 import com.activity_hub.notification_feed.service.impl.JwtService;
@@ -109,7 +106,7 @@ public class UserController {
     }
 
     @GetMapping("/get-user-details")
-    @PreAuthorize("hasAnyRole('USER,SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'SUPER_ADMIN')")
     public ResponseEntity<StandardResponseDto> getUserDetails(@AuthenticationPrincipal Jwt jwt) {
 
         String email = jwt.getClaimAsString("email");
@@ -121,6 +118,26 @@ public class UserController {
         );
 
     }
+
+    @PostMapping("/batch")
+    @PreAuthorize("hasAnyRole('USER', 'SUPER_ADMIN')")
+    public ResponseEntity<StandardResponseDto> getUserDetailsById(@RequestBody UserBatchRequestDto dto) {
+        if (dto.getIds() == null || dto.getIds().isEmpty()) {
+            return new ResponseEntity<>(
+                    new StandardResponseDto(400, "User IDs list cannot be empty", null),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        List<UserResponseDto> userDetails = systemUserService.getUserDetailsByIds(dto.getIds());
+
+        return new ResponseEntity<>(
+                new StandardResponseDto(200, "user details!", userDetails),
+                HttpStatus.OK
+        );
+
+    }
+
     @GetMapping("/visitors/get-all-user-details")
     public ResponseEntity<StandardResponseDto> getUserAllDetails(
             @RequestParam String searchText
